@@ -1,0 +1,9 @@
+argv = ['/usr/local/bin/node-waf', 'clean', 'configure', 'build']
+blddir = '/Users/aguilarlopez/Dropbox/Development/cloudescape/node-debugger/build'
+commands = {'dist': 0, 'configure': True, 'distcheck': 0, 'install': 0, 'build': True, 'clean': True, 'distclean': 0, 'check': 0, 'uninstall': 0}
+cwd = '/Users/aguilarlopez/Dropbox/Development/cloudescape/node-debugger'
+environ = {'TERM_SESSION_ID': 'BE3E3435-687B-4D82-9F9C-1D66ECFE67E5', 'SSH_AUTH_SOCK': '/tmp/launch-awryCY/Listeners', 'COMP_WORDBREAKS': '', 'VERSIONER_PYTHON_PREFER_32_BIT': 'no', 'LC_CTYPE': 'en_US.UTF-8', 'TERM_PROGRAM_VERSION': '303', 'SHELL': '/bin/zsh', 'LOGNAME': 'aguilarlopez', 'USER': 'aguilarlopez', 'HOME': '/Users/aguilarlopez', 'PATH': '/opt/local/bin:/opt/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:/Users/aguilarlopez/Dropbox/Development/cloudescape/depot_tools', 'DISPLAY': '/tmp/launch-8ojJi0/org.x:0', '_': '/usr/local/bin/node-waf', 'TERM_PROGRAM': 'Apple_Terminal', 'LANG': 'en_US.UTF-8', 'TERM': 'xterm-256color', 'Apple_PubSub_Socket_Render': '/tmp/launch-KtF560/Render', 'VERSIONER_PYTHON_VERSION': '2.7', 'SHLVL': '1', 'OLDPWD': '/Users/aguilarlopez/Dropbox/Development/cloudescape/node-debugger/src', '__CF_USER_TEXT_ENCODING': '0x1F5:0:0', 'Apple_Ubiquity_Message': '/tmp/launch-gVJ05y/Apple_Ubiquity_Message', 'PWD': '/Users/aguilarlopez/Dropbox/Development/cloudescape/node-debugger', 'TMPDIR': '/var/tmp/', 'GREP_OPTIONS': '--color=auto', 'GREP_COLOR': '1;32', 'COMMAND_MODE': 'unix2003', 'PAGER': 'less', 'LSCOLORS': 'Gxfxcxdxbxegedabagacad'}
+files = []
+hash = 0
+options = {'compile_targets': None, 'force': False, 'verbose': 0, 'nocache': False, 'progress_bar': 0, 'destdir': '', 'keep': False, 'zones': '', 'blddir': '', 'prefix': '/usr/local/', 'jobs': 4, 'srcdir': '', 'check_cxx_compiler': 'g++'}
+srcdir = '/Users/aguilarlopez/Dropbox/Development/cloudescape/node-debugger/src'
