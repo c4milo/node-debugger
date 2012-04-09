@@ -21,6 +21,7 @@ namespace dbg {
         NODE_SET_METHOD(debuggerObj, "getScripts", Debugger::GetScripts);
         NODE_SET_METHOD(debuggerObj, "setBreakpoint", Debugger::SetBreakpoint);
         NODE_SET_METHOD(debuggerObj, "removeBreakpoint", Debugger::RemoveBreakpoint);
+        NODE_SET_METHOD(debuggerObj, "clearBreakpoints", Debugger::ClearBreakpoints);
 
         target->Set(String::NewSymbol("v8debugger"), debuggerObj);
     }
@@ -155,6 +156,24 @@ namespace dbg {
 
         TryCatch try_catch;
         Debug::Call(removeBreakpointFn, argsObj);
+
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
+    }
+
+    Handle<Value> Debugger::ClearBreakpoints(const Arguments& args) {
+        HandleScope scope;
+
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        Handle<Function> clearBreakpointsFn = Local<Function>::Cast(debugger->script->Get(String::New("clearBreakpoints")));
+
+        Local<Context> debuggerContext = Debug::GetDebugContext();
+        Context::Scope contextScope(debuggerContext);
+
+        TryCatch try_catch;
+        Debug::Call(clearBreakpointsFn);
 
         if (try_catch.HasCaught()) {
             FatalException(try_catch);

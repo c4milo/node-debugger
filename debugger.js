@@ -30,7 +30,7 @@ function Debugger() {
     };
 
     this.clearBreakpoints = function(state, args) {
-
+        Debug.clearAllBreakPoints();
     };
 
     this.activateBreakpoints = function(state, args) {
