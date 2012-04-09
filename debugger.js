@@ -34,11 +34,11 @@ function Debugger() {
     };
 
     this.activateBreakpoints = function(state, args) {
-
+        Debug.debuggerFlags().breakPointsActive.setValue(true);
     };
 
     this.deactivateBreakpoints = function(state, args) {
-
+        Debug.debuggerFlags().breakPointsActive.setValue(false);
     };
 
     this.pauseOnExceptionState = function(exceptionState) {
