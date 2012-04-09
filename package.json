@@ -16,5 +16,5 @@
     "scripts": {
        "install": "make"
     },
-    "main" : "./debugger.node"
+    "main" : "./index"
 }

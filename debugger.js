@@ -1,12 +1,10 @@
-var bindings = require('./bindings').debugger;
-
 function Debugger() {
 
 }
 
 (function() {
-    this.getScripts = function(ctxData) {
-
+    this.getScripts = function() {
+        return Debug.scripts();
     };
 
     this.setBreakpoint = function(state, args) {
@@ -60,10 +58,7 @@ function Debugger() {
     this.getAfterCompileScript = function(eventData) {
 
     };
+
+    return new Debugger();
 }).call(Debugger.prototype);
 
-/**
- * We need to compile this script in the v8 debug context,
- * in order to have access to internal v8 debug objects
- **/
-module.exports = bindings.initialize(JSON.stringify(new Debugger()));

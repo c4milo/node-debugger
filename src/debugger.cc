@@ -13,15 +13,64 @@ namespace dbg {
         Local<Object> debuggerObj = debugger_template_->NewInstance();
 
         NODE_SET_METHOD(debuggerObj, "initialize", Debugger::InitDebugger);
+        NODE_SET_METHOD(debuggerObj, "getScripts", Debugger::GetScripts);
 
-        target->Set(String::NewSymbol("debugger"), debuggerObj);
+        target->Set(String::NewSymbol("v8debugger"), debuggerObj);
     }
 
     Debugger::Debugger() : ObjectWrap() {}
-    Debugger::~Debugger() {}
+    Debugger::~Debugger() {
+        script.Dispose();
+    }
 
     Handle<Value> Debugger::InitDebugger(const Arguments& args) {
+        HandleScope scope;
+        if (args.Length() == 0 ) {
+            return ThrowException(Exception::TypeError(
+            String::New("You must specify arguments to invoke this function")));
+        }
 
+        if (!args[0]->IsString()) {
+            return ThrowException(Exception::TypeError(
+            String::New("First argument must be a string")));
+        }
+
+        Local<Context> debuggerContext = Debug::GetDebugContext();
+        Context::Scope contextScope(debuggerContext);
+
+        Debugger* debugger = new Debugger();
+
+        TryCatch try_catch;
+        debugger->script = Persistent<Object>::New(Local<Object>::Cast(Script::Compile(args[0]->ToString())->Run()));
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
+
+        Local<Object> obj = args.This();
+        debugger->Wrap(obj);
+
+        //Debug::SetDebugEventListener2(&Debugger::v8DebugEventCallback, External::New(debugger));
+
+        return scope.Close(obj);
+    }
+
+    Handle<Value> Debugger::GetScripts(const Arguments& args) {
+        HandleScope scope;
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        Local<Function> scriptsFn = Local<Function>::Cast(debugger->script->Get(String::New("getScripts")));
+
+        Local<Context> debuggerContext = Debug::GetDebugContext();
+        Context::Scope contextScope(debuggerContext);
+
+        TryCatch try_catch;
+        Local<Value> scripts = scriptsFn->Call(debugger->script, 0, NULL);
+
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
+
+        return scripts;
     }
 
 } //namespace dbg

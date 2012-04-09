@@ -38,7 +38,11 @@ namespace dbg {
             static Handle<Value> SetPauseOnNextStatement(const Arguments& args);
             static Handle<Value> CurrentFrame(const Arguments& args);
 
+            static void v8DebugEventCallback(const Debug::EventDetails& eventDetails);
+
         private:
+            Persistent<Object> script;
+            void handleV8DebugEvent(const Debug::EventDetails& eventDetails);
             static Persistent<ObjectTemplate> debugger_template_;
     };
 } //namespace dbg
