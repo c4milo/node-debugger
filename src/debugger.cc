@@ -20,6 +20,7 @@ namespace dbg {
         NODE_SET_METHOD(debuggerObj, "initialize", Debugger::InitDebugger);
         NODE_SET_METHOD(debuggerObj, "getScripts", Debugger::GetScripts);
         NODE_SET_METHOD(debuggerObj, "setBreakpoint", Debugger::SetBreakpoint);
+        NODE_SET_METHOD(debuggerObj, "removeBreakpoint", Debugger::RemoveBreakpoint);
 
         target->Set(String::NewSymbol("v8debugger"), debuggerObj);
     }
@@ -114,14 +115,50 @@ namespace dbg {
 
         Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
 
+        Local<Context> debuggerContext = Debug::GetDebugContext();
+        Context::Scope contextScope(debuggerContext);
+
         Local<Function> setBreakpointFn = Local<Function>::Cast(debugger->script->Get(String::New("setBreakpoint")));
+
+        TryCatch try_catch;
+        Handle<Value> breakpointId = Debug::Call(setBreakpointFn, arg);
+
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
+
+        return breakpointId->ToString();
+    }
+
+    Handle<Value> Debugger::RemoveBreakpoint(const Arguments& args) {
+        HandleScope scope;
+
+        if (args.Length() == 0 ) {
+            return ThrowException(Exception::TypeError(
+            String::New("You must specify arguments to invoke this function")));
+        }
+
+        if (!args[0]->IsString()) {
+            return ThrowException(Exception::TypeError(
+            String::New("First argument must be a string")));
+        }
+
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        Local<Object> argsObj = Object::New();
+        argsObj->Set(String::New("breakpointId"), args[0]->ToString());
+
+        Handle<Function> removeBreakpointFn = Local<Function>::Cast(debugger->script->Get(String::New("removeBreakpoint")));
 
         Local<Context> debuggerContext = Debug::GetDebugContext();
         Context::Scope contextScope(debuggerContext);
 
-        Handle<Value> breakpointId = Debug::Call(setBreakpointFn, arg);
+        TryCatch try_catch;
+        Debug::Call(removeBreakpointFn, argsObj);
 
-        return breakpointId->ToString();
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
     }
 
 } //namespace dbg

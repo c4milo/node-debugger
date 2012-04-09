@@ -8,12 +8,12 @@ function Debugger() {
     };
 
     this.setBreakpoint = function(state, breakpoint) {
-        var breakId = Debug.setScriptBreakPointById(breakpoint.sourceId,
-                                                    breakpoint.line,
-                                                    breakpoint.column,
-                                                    braekpoint.condition);
+        var breakpointId = Debug.setScriptBreakPointById(breakpoint.sourceId,
+                                                         breakpoint.line,
+                                                         breakpoint.column,
+                                                         breakpoint.condition);
 
-        var locations = Debug.findBreakPointActualLocations(breakId);
+        var locations = Debug.findBreakPointActualLocations(breakpointId);
         if (!locations.length) {
             return undefined;
         }
@@ -22,11 +22,11 @@ function Debugger() {
         breakpoint.line = location.line;
         breakpoint.column = location.column;
 
-        return breakId.toString();
+        return breakpointId.toString();
     };
 
     this.removeBreakpoint = function(state, args) {
-
+        Debug.findBreakPoint(args.breakpointId, true);
     };
 
     this.clearBreakpoints = function(state, args) {
