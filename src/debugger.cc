@@ -4,6 +4,11 @@
 namespace dbg {
     Persistent<ObjectTemplate> Debugger::debugger_template_;
 
+    static Persistent<String> source_id_sym     = NODE_PSYMBOL("sourceId");
+    static Persistent<String> line_sym          = NODE_PSYMBOL("line");
+    static Persistent<String> column_sym        = NODE_PSYMBOL("column");
+    static Persistent<String> condition_sym     = NODE_PSYMBOL("condition");
+
     void Debugger::Initialize(Handle<Object> target) {
         HandleScope scope;
 
@@ -14,6 +19,7 @@ namespace dbg {
 
         NODE_SET_METHOD(debuggerObj, "initialize", Debugger::InitDebugger);
         NODE_SET_METHOD(debuggerObj, "getScripts", Debugger::GetScripts);
+        NODE_SET_METHOD(debuggerObj, "setBreakpoint", Debugger::SetBreakpoint);
 
         target->Set(String::NewSymbol("v8debugger"), debuggerObj);
     }
@@ -71,6 +77,51 @@ namespace dbg {
         }
 
         return scripts;
+    }
+
+    Handle<Value> Debugger::SetBreakpoint(const Arguments& args) {
+        HandleScope scope;
+
+        if (args.Length() == 0 || !args[0]->IsObject()) {
+            return ThrowException(Exception::TypeError(
+            String::New("You must specify an object as argument")));
+        }
+
+        Local<Object> arg = args[0]->ToObject();
+
+        if (!arg->Has(source_id_sym) ||
+            !arg->Get(source_id_sym)->IsInt32()) {
+            return ThrowException(Exception::TypeError(
+            String::New("You must specify a valid source identifier")));
+        }
+
+        if (!arg->Has(line_sym) ||
+            !arg->Get(line_sym)->IsInt32()) {
+            return ThrowException(Exception::TypeError(
+            String::New("You must specify a valid line number")));
+        }
+
+        if (!arg->Has(column_sym) ||
+            !arg->Get(column_sym)->IsInt32()) {
+            return ThrowException(Exception::TypeError(
+            String::New("You must specify a valid column number")));
+        }
+
+        if (!arg->Has(condition_sym) ||
+            !arg->Get(condition_sym)->IsString()) {
+            arg->Set(condition_sym, String::New(""));
+        }
+
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        Local<Function> setBreakpointFn = Local<Function>::Cast(debugger->script->Get(String::New("setBreakpoint")));
+
+        Local<Context> debuggerContext = Debug::GetDebugContext();
+        Context::Scope contextScope(debuggerContext);
+
+        Handle<Value> breakpointId = Debug::Call(setBreakpointFn, arg);
+
+        return breakpointId->ToString();
     }
 
 } //namespace dbg

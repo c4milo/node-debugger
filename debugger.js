@@ -7,8 +7,22 @@ function Debugger() {
         return Debug.scripts();
     };
 
-    this.setBreakpoint = function(state, args) {
+    this.setBreakpoint = function(state, breakpoint) {
+        var breakId = Debug.setScriptBreakPointById(breakpoint.sourceId,
+                                                    breakpoint.line,
+                                                    breakpoint.column,
+                                                    braekpoint.condition);
 
+        var locations = Debug.findBreakPointActualLocations(breakId);
+        if (!locations.length) {
+            return undefined;
+        }
+
+        var location = locations[0];
+        breakpoint.line = location.line;
+        breakpoint.column = location.column;
+
+        return breakId.toString();
     };
 
     this.removeBreakpoint = function(state, args) {
