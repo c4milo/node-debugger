@@ -40,7 +40,8 @@ namespace dbg {
             static Handle<Value> SetScriptSource(const Arguments& args);
             static Handle<Value> CurrentFrame(const Arguments& args);
 
-            static void v8DebugEventCallback(const Debug::EventDetails& eventDetails);
+            static void DebugEventCallback(const Debug::EventDetails& eventDetails);
+            void handleDebugEvent(const Debug::EventDetails& eventDetails);
 
         private:
             Persistent<Object> script;

@@ -84,9 +84,9 @@ namespace dbg {
         Local<Object> obj = args.This();
         debugger->Wrap(obj);
 
-        //Debug::SetDebugEventListener2(&Debugger::v8DebugEventCallback, External::New(debugger));
+        Debug::SetDebugEventListener2(&Debugger::DebugEventCallback, External::New(debugger));
 
-        return scope.Close(obj);
+        return obj;
     }
 
     Handle<Value> Debugger::GetScripts(const Arguments& args) {
@@ -375,5 +375,18 @@ namespace dbg {
         if (try_catch.HasCaught()) {
             FatalException(try_catch);
         }
+    }
+
+    void Debugger::DebugEventCallback(const Debug::EventDetails& eventDetails) {
+        void* p = Handle<External>::Cast(eventDetails.GetCallbackData())->Value();
+        Debugger* debugger = static_cast<Debugger*>(p);
+
+        debugger->handleDebugEvent(eventDetails);
+    }
+
+    void Debugger::handleDebugEvent(const Debug::EventDetails& eventDetails) {
+        DebugEvent event = eventDetails.GetEvent();
+
+        fprintf(stderr, "%i\n", event);
     }
 } //namespace dbg
