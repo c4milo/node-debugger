@@ -1,4 +1,5 @@
 function Debugger() {
+    this.paused = false;
 }
 
 (function() {
@@ -72,19 +73,38 @@ function Debugger() {
     };
 
     this.stepInto = function(state) {
-
+        state.prepareStep(Debug.StepAction.StepIn, 1);
     };
 
     this.stepOver = function(state) {
-
+        state.prepareStep(Debug.StepAction.StepNext, 1);
     };
 
     this.stepOut = function(state) {
-
+        state.prepareStep(Debug.StepAction.StepOut, 1);
     };
 
     this.setScriptSource = function(scriptId, newSource, preview) {
+        var scripts = Debug.scripts();
+        var scriptToEdit;
 
+        for (var i = 0; i < scripts.length; i++) {
+            if (scripts[i].id == scriptId) {
+                scriptToEdit = scripts[i];
+                break;
+            }
+        }
+
+        if (!scriptToEdit) {
+            //Revisit this, we shouldn't throw in nodejs
+           throw("Script not found");
+        }
+
+        var changeLog = [];
+        return Debug.LiveEdit.SetScriptSource(scriptToEdit,
+                                              newSource,
+                                              preview,
+                                              changeLog);
     };
 
     this.getAfterCompileScript = function(eventData) {

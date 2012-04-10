@@ -39,6 +39,16 @@ namespace dbg {
                         Debugger::SetBreakOnUncaughtException);
         NODE_SET_METHOD(debuggerObj, "clearBreakOnUncaughtException",
                         Debugger::ClearBreakOnUncaughtException);
+        NODE_SET_METHOD(debuggerObj, "pause",
+                        Debugger::PauseProgram);
+        NODE_SET_METHOD(debuggerObj, "resume",
+                        Debugger::ResumeProgram);
+        NODE_SET_METHOD(debuggerObj, "stepInto",
+                        Debugger::StepInto);
+        NODE_SET_METHOD(debuggerObj, "stepOver",
+                        Debugger::StepOver);
+        NODE_SET_METHOD(debuggerObj, "stepOut",
+                        Debugger::StepOut);
 
         target->Set(String::NewSymbol("v8debugger"), debuggerObj);
     }
@@ -305,4 +315,65 @@ namespace dbg {
         }
     }
 
+    Handle<Value> Debugger::PauseProgram(const Arguments& args) {
+        Debug::DebugBreak();
+    }
+
+    Handle<Value> Debugger::ResumeProgram(const Arguments& args) {
+       Debug::CancelDebugBreak();
+    }
+
+    Handle<Value> Debugger::StepInto(const Arguments& args) {
+        HandleScope scope;
+
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        Handle<Function> stepIntoFn = Local<Function>::Cast(debugger->script->Get(String::New("stepInto")));
+
+        Local<Context> debuggerContext = Debug::GetDebugContext();
+        Context::Scope contextScope(debuggerContext);
+
+        TryCatch try_catch;
+        Debug::Call(stepIntoFn);
+
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
+    }
+
+    Handle<Value> Debugger::StepOver(const Arguments& args) {
+        HandleScope scope;
+
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        Handle<Function> stepOverFn = Local<Function>::Cast(debugger->script->Get(String::New("stepOver")));
+
+        Local<Context> debuggerContext = Debug::GetDebugContext();
+        Context::Scope contextScope(debuggerContext);
+
+        TryCatch try_catch;
+        Debug::Call(stepOverFn);
+
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
+    }
+
+    Handle<Value> Debugger::StepOut(const Arguments& args) {
+        HandleScope scope;
+
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        Handle<Function> stepOutFn = Local<Function>::Cast(debugger->script->Get(String::New("stepOut")));
+
+        Local<Context> debuggerContext = Debug::GetDebugContext();
+        Context::Scope contextScope(debuggerContext);
+
+        TryCatch try_catch;
+        Debug::Call(stepOutFn);
+
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
+    }
 } //namespace dbg

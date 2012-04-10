@@ -38,7 +38,6 @@ namespace dbg {
             static Handle<Value> StepOver(const Arguments& args);
             static Handle<Value> StepOut(const Arguments& args);
             static Handle<Value> SetScriptSource(const Arguments& args);
-            static Handle<Value> SetPauseOnNextStatement(const Arguments& args);
             static Handle<Value> CurrentFrame(const Arguments& args);
 
             static void v8DebugEventCallback(const Debug::EventDetails& eventDetails);
