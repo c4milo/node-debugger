@@ -17,13 +17,28 @@ namespace dbg {
 
         Local<Object> debuggerObj = debugger_template_->NewInstance();
 
-        NODE_SET_METHOD(debuggerObj, "initialize", Debugger::InitDebugger);
-        NODE_SET_METHOD(debuggerObj, "getScripts", Debugger::GetScripts);
-        NODE_SET_METHOD(debuggerObj, "setBreakpoint", Debugger::SetBreakpoint);
-        NODE_SET_METHOD(debuggerObj, "removeBreakpoint", Debugger::RemoveBreakpoint);
-        NODE_SET_METHOD(debuggerObj, "clearBreakpoints", Debugger::ClearBreakpoints);
-        NODE_SET_METHOD(debuggerObj, "activateBreakpoints", Debugger::ActivateBreakpoints);
-        NODE_SET_METHOD(debuggerObj, "deactivateBreakpoints", Debugger::DeactivateBreakpoints);
+        NODE_SET_METHOD(debuggerObj, "initialize",
+                        Debugger::InitDebugger);
+        NODE_SET_METHOD(debuggerObj, "getScripts",
+                        Debugger::GetScripts);
+        NODE_SET_METHOD(debuggerObj, "setBreakpoint",
+                        Debugger::SetBreakpoint);
+        NODE_SET_METHOD(debuggerObj, "removeBreakpoint",
+                        Debugger::RemoveBreakpoint);
+        NODE_SET_METHOD(debuggerObj, "clearBreakpoints",
+                        Debugger::ClearBreakpoints);
+        NODE_SET_METHOD(debuggerObj, "activateBreakpoints",
+                        Debugger::ActivateBreakpoints);
+        NODE_SET_METHOD(debuggerObj, "deactivateBreakpoints",
+                        Debugger::DeactivateBreakpoints);
+        NODE_SET_METHOD(debuggerObj, "setBreakOnException",
+                        Debugger::SetBreakOnException);
+        NODE_SET_METHOD(debuggerObj, "clearBreakOnException",
+                        Debugger::ClearBreakOnException);
+        NODE_SET_METHOD(debuggerObj, "setBreakOnUncaughtException",
+                        Debugger::SetBreakOnUncaughtException);
+        NODE_SET_METHOD(debuggerObj, "clearBreakOnUncaughtException",
+                        Debugger::ClearBreakOnUncaughtException);
 
         target->Set(String::NewSymbol("v8debugger"), debuggerObj);
     }
@@ -212,6 +227,78 @@ namespace dbg {
 
         TryCatch try_catch;
         Debug::Call(deactivateBreakpointsFn);
+
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
+    }
+
+    Handle<Value> Debugger::SetBreakOnException(const Arguments& args) {
+        HandleScope scope;
+
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        Handle<Function> setBreakOnExceptionFn = Local<Function>::Cast(debugger->script->Get(String::New("setBreakOnException")));
+
+        Local<Context> debuggerContext = Debug::GetDebugContext();
+        Context::Scope contextScope(debuggerContext);
+
+        TryCatch try_catch;
+        Debug::Call(setBreakOnExceptionFn);
+
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
+    }
+
+    Handle<Value> Debugger::ClearBreakOnException(const Arguments& args) {
+        HandleScope scope;
+
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        Handle<Function> clearBreakOnExceptionFn = Local<Function>::Cast(debugger->script->Get(String::New("clearBreakOnException")));
+
+        Local<Context> debuggerContext = Debug::GetDebugContext();
+        Context::Scope contextScope(debuggerContext);
+
+        TryCatch try_catch;
+        Debug::Call(clearBreakOnExceptionFn);
+
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
+    }
+
+    Handle<Value> Debugger::SetBreakOnUncaughtException(const Arguments& args) {
+        HandleScope scope;
+
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        Handle<Function> setBreakOnUncaughtExceptionFn = Local<Function>::Cast(debugger->script->Get(String::New("setBreakOnUncaughtException")));
+
+        Local<Context> debuggerContext = Debug::GetDebugContext();
+        Context::Scope contextScope(debuggerContext);
+
+        TryCatch try_catch;
+        Debug::Call(setBreakOnUncaughtExceptionFn);
+
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
+    }
+
+    Handle<Value> Debugger::ClearBreakOnUncaughtException(const Arguments& args) {
+        HandleScope scope;
+
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        Handle<Function> clearBreakOnUncaughtExceptionFn = Local<Function>::Cast(debugger->script->Get(String::New("clearBreakOnUncaughtException")));
+
+        Local<Context> debuggerContext = Debug::GetDebugContext();
+        Context::Scope contextScope(debuggerContext);
+
+        TryCatch try_catch;
+        Debug::Call(clearBreakOnUncaughtExceptionFn);
 
         if (try_catch.HasCaught()) {
             FatalException(try_catch);

@@ -28,7 +28,10 @@ namespace dbg {
             static Handle<Value> ClearBreakpoints(const Arguments& args);
             static Handle<Value> ActivateBreakpoints(const Arguments& args);
             static Handle<Value> DeactivateBreakpoints(const Arguments& args);
-            static Handle<Value> SetPauseOnExceptionsState(const Arguments& args);
+            static Handle<Value> SetBreakOnException(const Arguments& args);
+            static Handle<Value> ClearBreakOnException(const Arguments& args);
+            static Handle<Value> SetBreakOnUncaughtException(const Arguments& args);
+            static Handle<Value> ClearBreakOnUncaughtException(const Arguments& args);
             static Handle<Value> PauseProgram(const Arguments& args);
             static Handle<Value> ResumeProgram(const Arguments& args);
             static Handle<Value> StepInto(const Arguments& args);

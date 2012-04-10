@@ -1,5 +1,4 @@
 function Debugger() {
-
 }
 
 (function() {
@@ -41,16 +40,35 @@ function Debugger() {
         Debug.debuggerFlags().breakPointsActive.setValue(false);
     };
 
-    this.pauseOnExceptionState = function(exceptionState) {
-        if (exceptionState) {
-            //set
-        } else {
-            //return
-        }
+    this.setBreakOnException = function(state, args) {
+        Debug.setBreakOnException();
+    };
+
+    this.clearBreakOnException = function(state, args) {
+        Debug.clearBreakOnException();
+    };
+
+    this.setBreakOnUncaughtException = function(state, args) {
+        Debug.setBreakOnUncaughtException();
+    };
+
+    this.clearBreakOnUncaughtException = function(state, args) {
+        Debug.clearBreakOnUncaughtException();
     };
 
     this.currentFrame = function(state, args) {
+        var count = state.frameCount();
+        if (count === 0) {
+            return undefined;
+        }
 
+        var topFrame = {};
+        for (var i = count - 1; i >= 0; i--) {
+            var frameMirror = state.frame(i);
+            //topFrame = DebuggerScript._frameMirrorToJSCallFrame(frameMirror, topFrame);
+        }
+
+        return topFrame;
     };
 
     this.stepInto = function(state) {
