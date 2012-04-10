@@ -1,5 +1,4 @@
 function Debugger() {
-    this.paused = false;
 }
 
 (function() {
