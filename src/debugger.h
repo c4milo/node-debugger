@@ -39,12 +39,21 @@ namespace dbg {
             static Handle<Value> StepOut(const Arguments& args);
             static Handle<Value> SetScriptSource(const Arguments& args);
             static Handle<Value> CurrentFrame(const Arguments& args);
+            static Handle<Value> AddListener(const Arguments& args);
 
             static void DebugEventCallback(const Debug::EventDetails& eventDetails);
             void handleDebugEvent(const Debug::EventDetails& eventDetails);
 
         private:
             Persistent<Object> script;
+            Persistent<Function> onBreak;
+            Persistent<Function> onException;
+            Persistent<Function> onNewFunction;
+            Persistent<Function> onBeforeCompile;
+            Persistent<Function> onAfterCompile;
+            Persistent<Function> onScriptCollected;
+            Persistent<Function> onBreakForCommand;
+
             void handleV8DebugEvent(const Debug::EventDetails& eventDetails);
             static Persistent<ObjectTemplate> debugger_template_;
     };

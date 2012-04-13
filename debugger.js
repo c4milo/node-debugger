@@ -2,8 +2,118 @@ function Debugger() {
 }
 
 (function() {
+    //TODO this function should live in node-webkit-agent
+    var formatScript = function(script) {
+        var lineEnds = script.line_ends;
+        var lineCount = lineEnds.length;
+        var endLine = script.line_offset + lineCount - 1;
+        var endColumn;
+        if (lineCount === 1) {
+            endColumn = script.source.length + script.column_offset;
+        } else {
+            endColumn = script.source.length - (script.line_ends[lineCount - 2] + 1);
+        }
+
+        return {
+            id: script.id,
+            name: script.nameOrSourceURL(),
+            source: script.source,
+            startLine: script.line_offset,
+            startColumn: script.column_offset,
+            endLine: endLine,
+            endColumn: endColumn,
+            isContentScript: !!script.context_data &&
+                            script.context_data.indexOf("injected") == 0
+        };
+    }
+
+    var frameMirrorToJSCallFrame = function(frameMirror, callerFrame) {
+        // Get function name.
+        var func;
+        try {
+            func = frameMirror.func();
+        } catch(e) {
+        }
+        var functionName;
+        if (func) {
+            functionName = func.name() || func.inferredName();
+        }
+
+        // Get script ID.
+        var script = func.script();
+        var sourceID = script && script.id();
+
+        // Get location.
+        var location  = frameMirror.sourceLocation();
+
+        // Get this object.
+        var thisObject = frameMirror.details_.receiver();
+
+        // Get scope chain array in format: [<scope type>, <scope object>, <scope type>, <scope object>,...]
+        var scopeChain = [];
+        var scopeType = [];
+        for (var i = 0; i < frameMirror.scopeCount(); i++) {
+            var scopeMirror = frameMirror.scope(i);
+            var scopeObjectMirror = scopeMirror.scopeObject();
+
+            var scopeObject;
+            switch (scopeMirror.scopeType()) {
+                case ScopeType.Local:
+                case ScopeType.Closure:
+                    // For transient objects we create a "persistent" copy that contains
+                    // the same properties.
+                    scopeObject = {};
+                    // Reset scope object prototype to null so that the proto properties
+                    // don't appear in the local scope section.
+                    scopeObject.__proto__ = null;
+                    var properties = scopeObjectMirror.properties();
+
+                    for (var j = 0; j < properties.length; j++) {
+                        var name = properties[j].name();
+                        if (name.charAt(0) === ".") {
+                            continue; // Skip internal variables like ".arguments"
+                        }
+                        scopeObject[name] = properties[j].value_;
+                    }
+                    break;
+                case ScopeType.Global:
+                case ScopeType.With:
+                case ScopeType.Catch:
+                    scopeObject = scopeMirror.details_.object();
+                    break;
+            }
+
+            scopeType.push(scopeMirror.scopeType());
+            scopeChain.push(scopeObject);
+        }
+
+        function evaluate(expression) {
+            return frameMirror.evaluate(expression, false).value();
+        }
+
+        return {
+            "sourceID": sourceID,
+            "line": location ? location.line : 0,
+            "column": location ? location.column : 0,
+            "functionName": functionName,
+            "thisObject": thisObject,
+            "scopeChain": scopeChain,
+            "scopeType": scopeType,
+            "evaluate": evaluate,
+            "caller": callerFrame
+        };
+    }
+
+
     this.getScripts = function() {
-        return Debug.scripts();
+        var scripts = Debug.scripts();
+        var formatted = [];
+
+        for (var i = 0, len = scripts.length; i < len; i++) {
+            formatted.push(formatScript(scripts[i]));
+        }
+
+        return formatted;
     };
 
     this.setBreakpoint = function(state, breakpoint) {
@@ -62,10 +172,10 @@ function Debugger() {
             return undefined;
         }
 
-        var topFrame = {};
+        var topFrame;
         for (var i = count - 1; i >= 0; i--) {
             var frameMirror = state.frame(i);
-            //topFrame = DebuggerScript._frameMirrorToJSCallFrame(frameMirror, topFrame);
+            topFrame = frameMirrorToJSCallFrame(frameMirror, topFrame);
         }
 
         return topFrame;
@@ -104,10 +214,6 @@ function Debugger() {
                                               newSource,
                                               preview,
                                               changeLog);
-    };
-
-    this.getAfterCompileScript = function(eventData) {
-
     };
 
     return new Debugger();

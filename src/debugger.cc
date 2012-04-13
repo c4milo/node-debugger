@@ -49,6 +49,8 @@ namespace dbg {
                         Debugger::StepOver);
         NODE_SET_METHOD(debuggerObj, "stepOut",
                         Debugger::StepOut);
+        NODE_SET_METHOD(debuggerObj, "on",
+                        Debugger::AddListener);
 
         target->Set(String::NewSymbol("v8debugger"), debuggerObj);
     }
@@ -56,6 +58,13 @@ namespace dbg {
     Debugger::Debugger() : ObjectWrap() {}
     Debugger::~Debugger() {
         script.Dispose();
+        onBreak.Dispose();
+        onException.Dispose();
+        onNewFunction.Dispose();
+        onBeforeCompile.Dispose();
+        onAfterCompile.Dispose();
+        onScriptCollected.Dispose();
+        onBreakForCommand.Dispose();
     }
 
     Handle<Value> Debugger::InitDebugger(const Arguments& args) {
@@ -377,16 +386,91 @@ namespace dbg {
         }
     }
 
+    Handle<Value> Debugger::AddListener(const Arguments& args) {
+        HandleScope scope;
+
+        int len = args.Length();
+        if (len < 2) {
+            return ThrowException(Exception::TypeError(
+            String::New("You must specify two arguments in order to invoke this function")));
+        }
+
+        if (!args[0]->IsInt32()) {
+            return ThrowException(Exception::TypeError(
+            String::New("First argument must be a number")));
+        }
+
+        if (!args[1]->IsFunction()) {
+            return ThrowException(Exception::TypeError(
+            String::New("Second argument must be a function")));
+        }
+
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        unsigned int event = args[0]->Int32Value();
+        Persistent<Function> function = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+        switch (event) {
+            case v8::Break:
+                debugger->onBreak = function;
+                break;
+            case v8::Exception:
+                debugger->onException = function;
+                break;
+            case v8::NewFunction:
+                debugger->onNewFunction = function;
+                break;
+            case v8::BeforeCompile:
+                debugger->onBeforeCompile = function;
+                break;
+            case v8::AfterCompile:
+                debugger->onAfterCompile = function;
+                break;
+            case v8::ScriptCollected:
+                debugger->onScriptCollected = function;
+                break;
+            case v8::BreakForCommand:
+                debugger->onBreakForCommand = function;
+                break;
+        }
+    }
+
     void Debugger::DebugEventCallback(const Debug::EventDetails& eventDetails) {
+        HandleScope scope;
         void* p = Handle<External>::Cast(eventDetails.GetCallbackData())->Value();
         Debugger* debugger = static_cast<Debugger*>(p);
 
-        debugger->handleDebugEvent(eventDetails);
-    }
+        //Handle<Context> eventContext = eventDetails.GetEventContext();
 
-    void Debugger::handleDebugEvent(const Debug::EventDetails& eventDetails) {
-        DebugEvent event = eventDetails.GetEvent();
+        Handle<Value> argv[] = { eventDetails.GetEventData() };
 
-        fprintf(stderr, "%i\n", event);
+        TryCatch try_catch;
+        Local<Function> callback;
+        switch (eventDetails.GetEvent()) {
+            case v8::Break:
+                debugger->onBreak->Call(debugger->handle_, 1, argv);
+                break;
+            case v8::Exception:
+                debugger->onException->Call(debugger->handle_, 1, argv);
+                break;
+            case v8::NewFunction:
+                debugger->onNewFunction->Call(debugger->handle_, 1, argv);
+                break;
+            case v8::BeforeCompile:
+                debugger->onBeforeCompile->Call(debugger->handle_, 1, argv);
+                break;
+            case v8::AfterCompile:
+                debugger->onAfterCompile->Call(debugger->handle_, 1, argv);
+                break;
+            case v8::ScriptCollected:
+                debugger->onScriptCollected->Call(debugger->handle_, 1, argv);
+                break;
+            case v8::BreakForCommand:
+                debugger->onBreakForCommand->Call(debugger->handle_, 1, argv);
+                break;
+        }
+
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
     }
 } //namespace dbg
