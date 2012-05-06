@@ -46,6 +46,7 @@ namespace dbg {
 
         private:
             Persistent<Object> script;
+            Persistent<Object> executionState;
             Persistent<Function> onBreak;
             Persistent<Function> onException;
             Persistent<Function> onNewFunction;
@@ -53,6 +54,8 @@ namespace dbg {
             Persistent<Function> onAfterCompile;
             Persistent<Function> onScriptCollected;
             Persistent<Function> onBreakForCommand;
+            Local<Context> pausedContext;
+            bool isPaused();
 
             void handleV8DebugEvent(const Debug::EventDetails& eventDetails);
             static Persistent<ObjectTemplate> debugger_template_;

@@ -58,6 +58,7 @@ namespace dbg {
     Debugger::Debugger() : ObjectWrap() {}
     Debugger::~Debugger() {
         script.Dispose();
+        executionState.Dispose();
         onBreak.Dispose();
         onException.Dispose();
         onNewFunction.Dispose();
@@ -325,11 +326,51 @@ namespace dbg {
     }
 
     Handle<Value> Debugger::PauseProgram(const Arguments& args) {
+        /*if (isPaused()) {
+            return Undefined();
+        }*/
+
+        HandleScope scope;
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        Local<Function> breakpointsActiveFn = Local<Function>::Cast(debugger->script->Get(String::New("breakpointsActive")));
+
+        Local<Context> debuggerContext = Debug::GetDebugContext();
+        Context::Scope contextScope(debuggerContext);
+
+        TryCatch try_catch;
+        Local<Value> active = breakpointsActiveFn->Call(debugger->script, 0, NULL);
+
+        if (try_catch.HasCaught()) {
+            FatalException(try_catch);
+        }
+
+        if (!active->IsTrue()) {
+            return Undefined();
+        }
+
+        //debuggerContext.Exit();
+
+        if (!Context::InContext()) {
+            return Undefined();
+        }
+
+        Handle<Context> context = Context::GetCurrent();
+        if (context.IsEmpty()) {
+            return Undefined();
+        }
+
+        debugger->pausedContext = *context;
+
+        //runs loop on debugger->pausedContext
         Debug::DebugBreak();
     }
 
     Handle<Value> Debugger::ResumeProgram(const Arguments& args) {
-       Debug::CancelDebugBreak();
+        Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
+
+        debugger->pausedContext.Clear();
+        //Debug::CancelDebugBreak();
     }
 
     Handle<Value> Debugger::StepInto(const Arguments& args) {
@@ -338,16 +379,19 @@ namespace dbg {
         Debugger* debugger = ObjectWrap::Unwrap<Debugger>(args.This());
 
         Handle<Function> stepIntoFn = Local<Function>::Cast(debugger->script->Get(String::New("stepInto")));
-
-        Local<Context> debuggerContext = Debug::GetDebugContext();
-        Context::Scope contextScope(debuggerContext);
+        if (debugger->executionState.IsEmpty()) {
+            return Undefined();
+        }
+        Handle<Value> argv[] = { debugger->executionState };
 
         TryCatch try_catch;
-        Debug::Call(stepIntoFn);
+        fprintf(stderr, "CALLING STEP INTO");
+        stepIntoFn->Call(debugger->script, 1, argv);
 
         if (try_catch.HasCaught()) {
             FatalException(try_catch);
         }
+        fprintf(stderr, "aqui!!!!!!!!!!!!!!!!!!!!");
     }
 
     Handle<Value> Debugger::StepOver(const Arguments& args) {
@@ -447,9 +491,15 @@ namespace dbg {
         Local<Function> callback;
         switch (eventDetails.GetEvent()) {
             case v8::Break:
+                if (!debugger->executionState.IsEmpty()) {
+                    debugger->executionState.Dispose();
+                }
+                debugger->executionState = Persistent<Object>::New(eventDetails.GetExecutionState());
+
                 debugger->onBreak->Call(debugger->handle_, 1, argv);
                 break;
             case v8::Exception:
+                debugger->executionState = *eventDetails.GetExecutionState();
                 debugger->onException->Call(debugger->handle_, 1, argv);
                 break;
             case v8::NewFunction:
@@ -472,5 +522,9 @@ namespace dbg {
         if (try_catch.HasCaught()) {
             FatalException(try_catch);
         }
+    }
+
+    bool Debugger::isPaused() {
+        return !executionState.IsEmpty();
     }
 } //namespace dbg

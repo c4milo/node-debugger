@@ -2,31 +2,10 @@ function Debugger() {
 }
 
 (function() {
+    Debug.clearBreakOnException();
+    Debug.clearBreakOnUncaughtException();
+
     //TODO this function should live in node-webkit-agent
-    var formatScript = function(script) {
-        var lineEnds = script.line_ends;
-        var lineCount = lineEnds.length;
-        var endLine = script.line_offset + lineCount - 1;
-        var endColumn;
-        if (lineCount === 1) {
-            endColumn = script.source.length + script.column_offset;
-        } else {
-            endColumn = script.source.length - (script.line_ends[lineCount - 2] + 1);
-        }
-
-        return {
-            id: script.id,
-            name: script.nameOrSourceURL(),
-            source: script.source,
-            startLine: script.line_offset,
-            startColumn: script.column_offset,
-            endLine: endLine,
-            endColumn: endColumn,
-            isContentScript: !!script.context_data &&
-                            script.context_data.indexOf("injected") == 0
-        };
-    }
-
     var frameMirrorToJSCallFrame = function(frameMirror, callerFrame) {
         // Get function name.
         var func;
@@ -41,7 +20,7 @@ function Debugger() {
 
         // Get script ID.
         var script = func.script();
-        var sourceID = script && script.id();
+        var scriptId = script && script.id();
 
         // Get location.
         var location  = frameMirror.sourceLocation();
@@ -92,7 +71,7 @@ function Debugger() {
         }
 
         return {
-            "sourceID": sourceID,
+            "scriptId": scriptId,
             "line": location ? location.line : 0,
             "column": location ? location.column : 0,
             "functionName": functionName,
@@ -106,14 +85,7 @@ function Debugger() {
 
 
     this.getScripts = function() {
-        var scripts = Debug.scripts();
-        var formatted = [];
-
-        for (var i = 0, len = scripts.length; i < len; i++) {
-            formatted.push(formatScript(scripts[i]));
-        }
-
-        return formatted;
+        return Debug.scripts();
     };
 
     this.setBreakpoint = function(state, breakpoint) {
@@ -144,6 +116,10 @@ function Debugger() {
 
     this.activateBreakpoints = function(state, args) {
         Debug.debuggerFlags().breakPointsActive.setValue(true);
+    };
+
+    this.breakpointsActivate = function(state, args) {
+        return Debug.debuggerFlags().breakPointsActive.getValue();
     };
 
     this.deactivateBreakpoints = function(state, args) {
